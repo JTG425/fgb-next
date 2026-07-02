@@ -15,7 +15,8 @@ export const readCache = () => {
 export const fetchTheaterData = async () => {
   try {
     const cachedData = readCache();
-    const response = await fetch(process.env.NEXT_PUBLIC_AWS_API_GATEWAY_URL);
+    // const response = await fetch(process.env.NEXT_PUBLIC_AWS_API_GATEWAY_URL);
+    const response = await fetch("https://hl07me5szc.execute-api.us-east-1.amazonaws.com/FGBGetS3Objects")
     if (!response.ok) {
       throw new Error(`HTTP error: ${response.status}`);
     }
