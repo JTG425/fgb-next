@@ -11,7 +11,7 @@
     top: 0;
     z-index: 10;
     background: var(--foreground-head);
-    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+    -webkit-backdrop-filter: blur(15px) saturate(1.4);
     backdrop-filter: blur(16px) saturate(1.4);
     border-bottom: 1px solid var(--border);
 }
