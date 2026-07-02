@@ -5,6 +5,7 @@
     justify-content: flex-start;
     margin-bottom: 1rem;
     gap: 1.5rem;
+    margin-top: 1rem;
 }
 
 .rentals-contact-card {
@@ -81,5 +82,11 @@
 @media screen and (max-width: 800px) {
     .rentals-content {
         grid-template-columns: 1fr;
+    }
+}
+
+@media screen and (max-width: 1000px) {
+    .rentals-container {
+        margin-top: 6rem;
     }
 }

@@ -40,8 +40,7 @@ export default function Home() {
           <SlideShow slideshowData={slideshow} />
           <div className="shell home-shell">
             <div className="section-head">
-              <p className="eyebrow">Fresh Popcorn Daily</p>
-              <h2>Now Showing</h2>
+              <p className="eyebrow">Now Showing</p>
             </div>
             <div className="home-controls">
               <SelectTheater

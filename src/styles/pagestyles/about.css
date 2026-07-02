@@ -4,6 +4,7 @@
     justify-content: flex-start;
     margin-bottom: 1rem;
     gap: 1.5rem;
+    margin-top: 1rem;
 }
 
 .about-hero {
@@ -109,4 +110,12 @@
     .about-text {
         text-align: center;
     }
+    
 }
+
+@media screen and (max-width: 1000px) {
+    .about-container {
+        margin-top: 6rem;
+    }
+}
+

@@ -98,8 +98,8 @@
 
 @media screen and (min-width: 1000px) {
     .nav-container {
-        top: 12px;
-        border-radius: 999px;
+        top: 20px;
+        border-radius: var(--border-radius);
         border: 1px solid var(--border);
         box-shadow: var(--shadow-md);
     }

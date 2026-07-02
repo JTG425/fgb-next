@@ -74,7 +74,6 @@ function Upcoming({ upcoming, handleDateChange }) {
       <div className="upcoming">
         <div className="section-head">
           <p className="eyebrow">On The Marquee Soon</p>
-          <h2>Coming Soon</h2>
         </div>
         <div className="marquee">
           <div

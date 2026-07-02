@@ -6,6 +6,7 @@
     height: fit-content;
     margin-bottom: 1rem;
     gap: 1.5rem;
+    margin-top: 1rem;
 }
 
 .buy-ticket-container {
@@ -66,4 +67,10 @@
     font-weight: 600;
     font-style: italic;
     color: var(--copy) !important;
+}
+
+@media screen and (max-width: 1000px) {
+    .tickets {
+        margin-top: 6rem;
+    }
 }

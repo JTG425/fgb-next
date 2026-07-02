@@ -5,6 +5,8 @@
     height: fit-content;
     margin-bottom: 1rem;
     gap: 1rem;
+    margin-top: 1rem;
+
 }
 
 .maps {
@@ -60,5 +62,11 @@
 @media screen and (max-width: 800px) {
     .maps {
         grid-template-columns: 1fr;
+    }
+}
+
+@media screen and (max-width: 1000px) {
+    .locations {
+        margin-top: 6rem;
     }
 }
