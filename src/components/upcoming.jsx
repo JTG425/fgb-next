@@ -1,8 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
 import "@/styles/componentstyles/upcoming.css";
-import Marquee from "react-fast-marquee";
 
 const handleUpcomingDate = (date) => {
   const year = date.slice(0, 4);
@@ -18,43 +16,85 @@ const handleUpcomingDateFormatting = (date) => {
   return new Date(year, month - 1, day);
 };
 
+function UpcomingShowCard({ show, onSelect, ariaHidden }) {
+  return (
+    <button
+      className="upcoming-show"
+      onClick={onSelect}
+      tabIndex={ariaHidden ? -1 : 0}
+      aria-hidden={ariaHidden || undefined}
+      title={`Jump to showtimes for ${show.name}`}
+    >
+      <span className="upcoming-title">
+        <h4>{show.name}</h4>
+        <p>{show.rating}</p>
+      </span>
+      <img
+        src={show.poster}
+        alt={ariaHidden ? "" : `${show.name} poster`}
+        loading="lazy"
+        decoding="async"
+      />
+      <p className="upcoming-date">{handleUpcomingDate(show.StartDate)}</p>
+    </button>
+  );
+}
+
 function Upcoming({ upcoming, handleDateChange }) {
   if (!upcoming || upcoming.length === 0) return null;
 
+  const selectShow = (show) => {
+    handleDateChange(handleUpcomingDateFormatting(show.StartDate));
+    // The showtime list this updates lives at the top of the page.
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // The track is rendered twice so the loop is seamless; the second copy is
+  // hidden from assistive tech and keyboard focus.
+  const marqueeDuration = `${Math.max(upcoming.length * 6, 18)}s`;
+
   return (
-    <div className="upcoming-container">
-      <div className="curtains">
-        <img className="leftcurtain" src="/assets/leftcurtain.png" alt="left curtain" />
-        <img className="rightcurtain" src="/assets/rightcurtain.png" alt="right curtain" />
+    <section className="upcoming-container">
+      <div className="curtains" aria-hidden="true">
+        <img
+          className="leftcurtain"
+          src="/assets/leftcurtain.webp"
+          alt=""
+          loading="lazy"
+          decoding="async"
+        />
+        <img
+          className="rightcurtain"
+          src="/assets/rightcurtain.webp"
+          alt=""
+          loading="lazy"
+          decoding="async"
+        />
       </div>
       <div className="upcoming">
-        <h2>Coming Soon</h2>
-        <div className="upcoming-shows">
-          <Marquee gradient={true} gradientColor="var(--background)" gradientWidth={75}>
-            {upcoming.map((show, index) => (
-              <motion.div
-                key={`upcoming-show-${index}`}
-                className="upcoming-show"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() =>
-                  handleDateChange(handleUpcomingDateFormatting(show.StartDate))
-                }
-              >
-                <span className="title">
-                  <a href={show.website} target="_blank" rel="noopener noreferrer">
-                    <h4>{show.name}</h4>
-                  </a>
-                  <p>{show.rating}</p>
-                </span>
-                <img src={show.poster} alt={`${show.name} poster`} />
-                <p>{handleUpcomingDate(show.StartDate)}</p>
-              </motion.div>
-            ))}
-          </Marquee>
+        <div className="section-head">
+          <p className="eyebrow">On The Marquee Soon</p>
+          <h2>Coming Soon</h2>
+        </div>
+        <div className="marquee">
+          <div
+            className="marquee-track"
+            style={{ animationDuration: marqueeDuration }}
+          >
+            {[false, true].map((ariaHidden) =>
+              upcoming.map((show, index) => (
+                <UpcomingShowCard
+                  key={`upcoming-${ariaHidden ? "dup" : "main"}-${index}`}
+                  show={show}
+                  ariaHidden={ariaHidden}
+                  onSelect={() => selectShow(show)}
+                />
+              ))
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 }
 

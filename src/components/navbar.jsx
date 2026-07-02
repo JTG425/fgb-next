@@ -7,23 +7,6 @@ import "@/styles/componentstyles/navbar.css";
 import DropDown from "./dropdown";
 import Logo from "./logo";
 
-const buttonVariants = {
-  Selected: {
-    background: "var(--primary)",
-    color: "#fbfbfb",
-    outline: "none",
-  },
-  NotSelected: {
-    background: "var(--foreground-glass)",
-    color: "var(--copy)",
-    outline: "none",
-  },
-  hovered: {
-    background: "var(--primary)",
-    scale: 1.05,
-  },
-};
-
 export const NAV_PAGES = [
   { name: "Home", path: "/" },
   { name: "Tickets", path: "/tickets" },
@@ -48,37 +31,39 @@ function NavBar() {
   return (
     <>
       <DropDown />
-      <motion.div
-        key="nav-container-key"
+      <motion.nav
         className="nav-container"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
+        initial={{ opacity: 0, y: -12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
       >
         <div className="nav-content-container">
-          <Link href="/">
+          <Link href="/" aria-label="FGB Theaters home">
             <Logo />
           </Link>
           <div className="nav-buttons-container">
             {NAV_PAGES.map(({ name, path }) => (
-              <Link href={path} key={name}>
-                <motion.button
-                  key={`nav-${name}-button`}
-                  whileTap={{ scale: 0.98 }}
-                  className="nav-button"
-                  initial={currentPage === name ? "Selected" : "NotSelected"}
-                  animate={currentPage === name ? "Selected" : "NotSelected"}
-                  variants={buttonVariants}
-                  whileHover="hovered"
-                  transition={{ duration: 0.25 }}
-                >
-                  {name}
-                </motion.button>
+              <Link
+                href={path}
+                key={name}
+                className={`nav-link${currentPage === name ? " active" : ""}`}
+                aria-current={currentPage === name ? "page" : undefined}
+              >
+                {/* The shared layoutId makes the red pill glide between
+                    links instead of blinking on navigation. */}
+                {currentPage === name && (
+                  <motion.span
+                    layoutId="nav-active-pill"
+                    className="nav-active-pill"
+                    transition={{ type: "spring", stiffness: 400, damping: 32 }}
+                  />
+                )}
+                <span className="nav-link-label">{name}</span>
               </Link>
             ))}
           </div>
         </div>
-      </motion.div>
+      </motion.nav>
     </>
   );
 }

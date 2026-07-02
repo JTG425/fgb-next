@@ -17,7 +17,7 @@ export default function TheaterMap({ longitude, latitude }) {
         latitude,
         zoom: 14,
       }}
-      style={{ width: "400px", height: "400px" }}
+      style={{ width: "100%", height: "100%" }}
       mapStyle={`mapbox://styles/mapbox/${theme}-v11`}
     >
       <Marker latitude={latitude} longitude={longitude} />

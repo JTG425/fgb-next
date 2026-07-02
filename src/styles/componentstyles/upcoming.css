@@ -5,107 +5,146 @@
   align-items: center;
   width: 100%;
   position: relative;
+  z-index: 1;
 }
 
 .upcoming {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    overflow-y: scroll;
-    padding: 1rem 0 3rem;
-    width: 100%;
-    max-width: 1000px;
-    -ms-overflow-style: none;  /* Internet Explorer 10+ */
-    scrollbar-width: none;  /* Firefox */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 2.5rem 0 3rem;
+  width: 100%;
+  max-width: 1060px;
+}
+
+/* CSS-only marquee: the track holds the list twice and slides one
+   list-width per loop, so the motion is seamless with zero JS. */
+.marquee {
+  width: 100%;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+}
+
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee-scroll linear infinite;
+}
+
+.marquee:hover .marquee-track,
+.marquee:focus-within .marquee-track {
+  animation-play-state: paused;
+}
+
+@keyframes marquee-scroll {
+  from {
+    transform: translateX(0);
   }
 
-  .upcoming::-webkit-scrollbar {
-    display: none;  /* Safari and Chrome */
+  to {
+    transform: translateX(-50%);
   }
-  
-  .upcoming h2 {
-    margin: 0;
-  }
-  
-  .upcoming-shows {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    position: relative;
-    -ms-overflow-style: none;
-    scrollbar-width: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee {
+    overflow-x: auto;
   }
 
-  .upcoming-shows::-webkit-scrollbar {
-    display: none;
+  .marquee-track {
+    animation: none;
   }
-  
-  
-  .upcoming-show {
-    width: 200px;
-    min-width: 100px;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: center;
-    background: var(--foreground);
-    box-shadow: var(--box-shadow);
-    border-radius: var(--border-radius);
-    padding: 1rem;
-    cursor: pointer;
-    overflow: hidden;
-    text-align: center;
-    margin: 25px;
-    z-index: 1;
-    border: 1px solid var(--border);
+}
+
+.upcoming-show {
+  width: 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  background: var(--foreground);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  border-radius: var(--border-radius);
+  padding: 1rem;
+  margin: 1rem 0.8rem 1.25rem;
+  cursor: pointer;
+  overflow: hidden;
+  text-align: center;
+  color: var(--copy);
+  font-family: inherit;
+  transition: transform 0.3s var(--ease-out), box-shadow 0.3s var(--ease-out), border-color 0.3s ease;
+}
+
+.upcoming-show:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+  border-color: color-mix(in srgb, var(--gold) 50%, var(--border));
+}
+
+.upcoming-show img {
+  width: 100%;
+  height: 150px;
+  object-fit: contain;
+  margin: 10px 0 12px;
+  border-radius: var(--radius-sm);
+}
+
+.upcoming-title h4 {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--copy);
+  margin: 0;
+}
+
+.upcoming-title p {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--copy-lighter);
+  margin: 2px 0 0;
+}
+
+.upcoming-date {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--gold-dark);
+  margin: 0;
+}
+
+@media (prefers-color-scheme: dark) {
+  .upcoming-date {
+    color: var(--gold);
   }
-  
-  .upcoming-show img {
-    width: 100%;
-    height: 150px;
-    object-fit: contain;
-    margin: 10px 0 15px;
-  }
-  
-  .title h4 {
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: var(--copy);
-    margin: 0;
-  }
-  
-  .title p,
-  .upcoming-show p {
-    font-size: 0.8rem;
-    font-weight: 400;
-    color: var(--copy-light);
-    margin: 0;
+}
+
+.curtains {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: absolute;
+  width: 125%;
+  max-width: 1280px;
+  top: 110px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.leftcurtain,
+.rightcurtain {
+  width: 230px;
+  height: auto;
+}
+
+@media screen and (max-width: 800px) {
+  .leftcurtain,
+  .rightcurtain {
+    width: 150px;
   }
 
   .curtains {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    position: absolute;
-    width: 125%;
-    max-width: 1200px;
-    top: 85px;
-    z-index: 2;
+    top: 130px;
   }
-
-  .leftcurtain {
-    width: 230px;
-    height: auto;
-  }
-  
-  .rightcurtain {
-    width: 230px;
-    height: auto;
-  }
-  
-
-  .rfm-overlay {
-    overflow: visible;
-  }
+}
