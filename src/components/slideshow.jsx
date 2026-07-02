@@ -3,6 +3,7 @@
 import "@/styles/componentstyles/slideshow.css";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { FaChevronLeft, FaChevronRight } from "react-icons/fa6";
 import BackgroundTransition from "./BackgroundTransition";
 
 // Wrap an index into [min, max)
@@ -30,9 +31,8 @@ const slideContentVariants = {
   }),
 };
 
-// Spring drives x only; opacity/scale run on tweens. The old config ran a
-// single duration-based spring across all three, and the spring overshoot
-// on scale/opacity read as flicker/wobble at the end of every swap.
+// Spring drives x only; opacity/scale run on tweens (spring overshoot on
+// scale/opacity read as flicker at the end of every swap).
 const slideTransition = {
   x: { type: "spring", stiffness: 300, damping: 32, mass: 0.9 },
   opacity: { duration: 0.35, ease: "easeInOut" },
@@ -43,7 +43,6 @@ export default function Slideshow({ slideshowData }) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [direction, setDirection] = useState(0);
   const [imagesLoaded, setImagesLoaded] = useState(false);
-  const [isAnimating, setIsAnimating] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
 
   // The lock is mirrored in a ref so timers never read stale state.
@@ -85,26 +84,27 @@ export default function Slideshow({ slideshowData }) {
   const releaseLock = useCallback(() => {
     clearTimeout(unlockTimer.current);
     lockRef.current = false;
-    setIsAnimating(false);
   }, []);
 
-  const move = useCallback(
-    (dir) => {
+  const goTo = useCallback(
+    (target, dir) => {
       if (lockRef.current || !imagesLoaded || slideCount <= 1) return;
       lockRef.current = true;
-      setIsAnimating(true);
       setDirection(dir);
-      setCurrentSlide((curr) => wrap(0, slideCount, curr + dir));
+      setCurrentSlide(target);
       clearTimeout(unlockTimer.current);
       unlockTimer.current = setTimeout(releaseLock, ANIMATION_SAFETY_MS);
     },
     [imagesLoaded, slideCount, releaseLock]
   );
 
+  const move = useCallback(
+    (dir) => goTo(wrap(0, Math.max(slideCount, 1), safeIndex + dir), dir),
+    [goTo, safeIndex, slideCount]
+  );
+
   // Autoplay: a fresh 5s timeout after *every* slide change (auto or manual),
-  // paused while a mouse is hovering. The old interval was torn down and
-  // rebuilt on every isAnimating flip, which drifted the pacing and risked
-  // a stale-closure deadlock that silently killed autoplay.
+  // paused while a mouse is hovering.
   useEffect(() => {
     if (!imagesLoaded || slideCount <= 1 || isHovering) return;
     const t = setTimeout(() => move(1), AUTOPLAY_MS);
@@ -121,7 +121,7 @@ export default function Slideshow({ slideshowData }) {
   return (
     <div
       className="slideshow"
-      // pointerType check: a touch tap no longer sticks the slideshow in a
+      // pointerType check: a touch tap must not stick the slideshow in a
       // permanent paused state the way :hover matching did on mobile.
       onPointerEnter={(e) => e.pointerType === "mouse" && setIsHovering(true)}
       onPointerLeave={(e) => e.pointerType === "mouse" && setIsHovering(false)}
@@ -133,6 +133,9 @@ export default function Slideshow({ slideshowData }) {
           transitionKey={safeIndex}
         />
       </AnimatePresence>
+
+      {/* Legibility scrim between the background and the slide content */}
+      <div className="slideshow-scrim" aria-hidden="true" />
 
       {/* Slides are absolutely stacked, so the default (sync) mode is the
           right fit here — popLayout's position snapshotting could cause a
@@ -173,23 +176,41 @@ export default function Slideshow({ slideshowData }) {
         </motion.div>
       </AnimatePresence>
 
-      {/* Moved outside AnimatePresence: the buttons previously lived inside
-          the animating slide, so the click targets slid, scaled, and faded
-          along with the content on every transition. */}
-      <div className="slideshow-controls">
-        <button
-          type="button"
-          disabled={isAnimating || !imagesLoaded}
-          onClick={() => move(-1)}
-          aria-label="Previous slide"
-        />
-        <button
-          type="button"
-          disabled={isAnimating || !imagesLoaded}
-          onClick={() => move(1)}
-          aria-label="Next slide"
-        />
-      </div>
+      {slideCount > 1 && (
+        <>
+          <button
+            type="button"
+            className="slideshow-arrow prev"
+            onClick={() => move(-1)}
+            aria-label="Previous slide"
+          >
+            <FaChevronLeft />
+          </button>
+          <button
+            type="button"
+            className="slideshow-arrow next"
+            onClick={() => move(1)}
+            aria-label="Next slide"
+          >
+            <FaChevronRight />
+          </button>
+
+          <div className="slideshow-dots" role="tablist" aria-label="Slides">
+            {slideshowData.map((s, index) => (
+              <button
+                key={`dot-${index}`}
+                type="button"
+                className={`slideshow-dot${
+                  index === safeIndex ? " active" : ""
+                }`}
+                onClick={() => goTo(index, index > safeIndex ? 1 : -1)}
+                aria-label={`Go to slide ${index + 1}`}
+                aria-current={index === safeIndex}
+              />
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }

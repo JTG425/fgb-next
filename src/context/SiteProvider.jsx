@@ -40,8 +40,10 @@ export default function SiteProvider({ children }) {
         setParShows(fetchedData.parShows);
         setSlideshow(fetchedData.slideshow);
         setUpcoming(fetchedData.upcoming);
-        setLoading(false);
       }
+      // Even if the fetch failed and there is no cache, release the
+      // overlay — the pages render graceful empty states.
+      setLoading(false);
     };
     loadData();
   }, []);

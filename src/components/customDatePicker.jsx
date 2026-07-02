@@ -1,33 +1,19 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { CiCalendar } from "react-icons/ci";
 import { motion, AnimatePresence } from "framer-motion";
 import "@/styles/componentstyles/customDatePicker.css";
 
 const containerVariants = {
-  hidden: { opacity: 0, scale: 0.95 },
+  hidden: { opacity: 0, scale: 0.95, y: 12 },
   visible: {
     opacity: 1,
     scale: 1,
-    transition: { duration: 0.3 },
+    y: 0,
+    transition: { duration: 0.3, ease: [0.22, 1, 0.36, 1] },
   },
-  exit: { opacity: 0, scale: 0.95, transition: { duration: 0.2 } },
-};
-
-const buttonVariants = {
-  hovered: {
-    backgroundColor: "var(--primary)",
-    color: "var(--copy)",
-    boxShadow: "0px 0px 10px rgba(148, 3, 3, 0.5)",
-    transition: { duration: 0.2 },
-  },
-  nothovered: {
-    backgroundColor: "var(--foreground)",
-    color: "var(--copy)",
-    boxShadow: "var(--box-shadow)",
-    transition: { duration: 0.2 },
-  },
+  exit: { opacity: 0, scale: 0.95, y: 12, transition: { duration: 0.2 } },
 };
 
 const monthNames = [
@@ -50,7 +36,6 @@ const getSuffix = (day) => {
   }
 };
 
-// Helper function to format the display date on the button
 const formatDisplayDate = (dateObj) => {
   const mm = dateObj.getMonth() + 1;
   const dd = dateObj.getDate();
@@ -74,86 +59,53 @@ const getDaysInMonth = (month, year) => {
   return days;
 };
 
+const atMidnight = (date) =>
+  new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
 const CustomDatepicker = ({ setDate }) => {
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
   const [selectedDate, setSelectedDate] = useState(today);
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [buttonText, setButtonText] = useState(formatDisplayDate(today));
-
-  useEffect(() => {
-    // On mount, set today's date as default and inform parent
-    if (setDate) setDate(new Date());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const days = getDaysInMonth(currentMonth, currentYear);
+  const todayTime = atMidnight(today).getTime();
+  const selectedTime = atMidnight(selectedDate).getTime();
 
   const handlePrevMonth = () => {
-    let newMonth = currentMonth - 1;
-    let newYear = currentYear;
-    if (newMonth < 0) {
-      newMonth = 11;
-      newYear = currentYear - 1;
-    }
-    setCurrentMonth(newMonth);
-    setCurrentYear(newYear);
+    setCurrentMonth((m) => (m === 0 ? 11 : m - 1));
+    if (currentMonth === 0) setCurrentYear((y) => y - 1);
   };
 
   const handleNextMonth = () => {
-    let newMonth = currentMonth + 1;
-    let newYear = currentYear;
-    if (newMonth > 11) {
-      newMonth = 0;
-      newYear = currentYear + 1;
-    }
-    setCurrentMonth(newMonth);
-    setCurrentYear(newYear);
+    setCurrentMonth((m) => (m === 11 ? 0 : m + 1));
+    if (currentMonth === 11) setCurrentYear((y) => y + 1);
   };
 
   const handleSelectDate = (day) => {
     if (!day) return;
-
     const chosenDate = new Date(currentYear, currentMonth, day);
-    const chosenDateMidnight = new Date(
-      chosenDate.getFullYear(),
-      chosenDate.getMonth(),
-      chosenDate.getDate()
-    );
-    const todayMidnight = new Date(
-      today.getFullYear(),
-      today.getMonth(),
-      today.getDate()
-    );
 
     // Only allow today's date or future dates
-    if (chosenDateMidnight.getTime() < todayMidnight.getTime()) return;
+    if (atMidnight(chosenDate).getTime() < todayTime) return;
 
     setSelectedDate(chosenDate);
     if (setDate) setDate(chosenDate);
-    setButtonText(formatDisplayDate(chosenDate));
     setShowDatePicker(false);
-  };
-
-  const toggleDatePicker = () => {
-    setShowDatePicker((prev) => !prev);
   };
 
   return (
     <div className="datepicker-wrapper">
-      <motion.button
-        key="datepicker-button"
+      <button
         className="datepicker-button"
-        variants={buttonVariants}
-        initial="nothovered"
-        whileHover="hovered"
-        whileTap="nothovered"
-        onClick={toggleDatePicker}
+        onClick={() => setShowDatePicker((prev) => !prev)}
+        aria-haspopup="dialog"
+        aria-expanded={showDatePicker}
       >
-        <CiCalendar size="25px" />
-        {buttonText}
-      </motion.button>
+        <CiCalendar size="22px" aria-hidden="true" />
+        {formatDisplayDate(selectedDate)}
+      </button>
 
       <AnimatePresence>
         {showDatePicker && (
@@ -163,24 +115,34 @@ const CustomDatepicker = ({ setDate }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: 0.25 }}
           >
             <motion.div
               className="datepicker-container"
-              onClick={(e) => e.stopPropagation()} // Prevent clicks inside container from closing datepicker
+              role="dialog"
+              aria-label="Choose a date"
+              onClick={(e) => e.stopPropagation()}
               variants={containerVariants}
               initial="hidden"
               animate="visible"
               exit="exit"
             >
               <div className="datepicker-header">
-                <button className="month-nav prev" onClick={handlePrevMonth}>
+                <button
+                  className="month-nav"
+                  onClick={handlePrevMonth}
+                  aria-label="Previous month"
+                >
                   &lt;
                 </button>
                 <div className="current-month">
                   {monthNames[currentMonth]} {currentYear}
                 </div>
-                <button className="month-nav next" onClick={handleNextMonth}>
+                <button
+                  className="month-nav"
+                  onClick={handleNextMonth}
+                  aria-label="Next month"
+                >
                   &gt;
                 </button>
               </div>
@@ -192,57 +154,33 @@ const CustomDatepicker = ({ setDate }) => {
                 ))}
 
                 {days.map((day, idx) => {
-                  const cellDate = day
-                    ? new Date(currentYear, currentMonth, day)
-                    : null;
-                  const cellDateCompare = cellDate
-                    ? new Date(
-                        cellDate.getFullYear(),
-                        cellDate.getMonth(),
-                        cellDate.getDate()
-                      )
-                    : null;
-                  const todayCompare = new Date(
-                    today.getFullYear(),
-                    today.getMonth(),
-                    today.getDate()
-                  );
-
-                  const isToday =
-                    cellDateCompare &&
-                    cellDateCompare.getTime() === todayCompare.getTime();
-                  const isSelected =
-                    cellDateCompare &&
-                    selectedDate &&
-                    cellDateCompare.getTime() ===
-                      new Date(
-                        selectedDate.getFullYear(),
-                        selectedDate.getMonth(),
-                        selectedDate.getDate()
-                      ).getTime();
-
-                  const isDisabled =
-                    cellDateCompare &&
-                    cellDateCompare.getTime() < todayCompare.getTime();
+                  if (!day) {
+                    return <div className="datepicker-cell empty" key={idx} />;
+                  }
+                  const cellTime = new Date(
+                    currentYear,
+                    currentMonth,
+                    day
+                  ).getTime();
+                  const isToday = cellTime === todayTime;
+                  const isSelected = cellTime === selectedTime;
+                  const isDisabled = cellTime < todayTime;
 
                   return (
-                    <motion.div
+                    <button
                       key={idx}
                       className={[
                         "datepicker-cell",
                         isToday ? "today" : "",
                         isSelected ? "selected" : "",
-                        isDisabled ? "disabled" : "",
-                      ].join(" ")}
-                      onClick={() => !isDisabled && handleSelectDate(day)}
-                      whileHover={{
-                        scale: !isDisabled ? 1.08 : 1,
-                        transition: { duration: 0.1 },
-                      }}
-                      whileTap={{ scale: !isDisabled ? 0.95 : 1 }}
+                      ]
+                        .filter(Boolean)
+                        .join(" ")}
+                      disabled={isDisabled}
+                      onClick={() => handleSelectDate(day)}
                     >
-                      {day || ""}
-                    </motion.div>
+                      {day}
+                    </button>
                   );
                 })}
               </div>

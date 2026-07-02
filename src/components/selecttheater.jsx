@@ -1,90 +1,45 @@
 "use client";
 
-// Source: https://www.hover.dev/components/toggles
-
 import { motion } from "framer-motion";
 import "@/styles/componentstyles/selecttheater.css";
 
-const textVariants = {
-  selected: {
-    color: "#ffffff",
-    fontSize: "0.80rem",
-  },
-  notselected: {
-    color: "var(--copy)",
-    fontSize: "0.75rem",
-  },
-  hovered: {
-    color: "var(--copy-light)",
-  },
-};
+const THEATERS = [
+  { id: "capitol", label: "Capitol Theater", town: "Montpelier" },
+  { id: "paramount", label: "Paramount Theater", town: "Barre" },
+];
 
 const sliderVariants = {
-  capitol: {
-    x: 0,
-  },
-  paramount: {
-    x: "100%",
-  },
+  capitol: { x: 0 },
+  paramount: { x: "100%" },
 };
 
 const SelectTheater = ({ selected, setSelected }) => {
   return (
-    <div className="select-theater-container">
-      <div className="toggle-background">
+    <div
+      className="select-theater-container"
+      role="tablist"
+      aria-label="Choose a theater"
+    >
+      {THEATERS.map(({ id, label, town }) => (
         <button
-          className="toggle-button"
-          onClick={() => setSelected("capitol")}
+          key={id}
+          role="tab"
+          aria-selected={selected === id}
+          className={`toggle-button${selected === id ? " selected" : ""}`}
+          onClick={() => setSelected(id)}
         >
-          <motion.span
-            className="button-text"
-            initial="selected"
-            whileHover="hovered"
-          >
-            <motion.p
-              initial="selected"
-              whileHover="hovered"
-              animate={selected === "capitol" ? "selected" : "notselected"}
-              variants={textVariants}
-              transition={{ duration: 0.25 }}
-            >
-              Capitol Theater
-            </motion.p>
-          </motion.span>
+          <span className="toggle-label">{label}</span>
+          <span className="toggle-town">{town}, VT</span>
         </button>
-        <button
-          className="toggle-button"
-          onClick={() => setSelected("paramount")}
-        >
-          <motion.span
-            className="button-text"
-            initial="notselected"
-            whileHover="hovered"
-            animate={selected === "paramount" ? "selected" : "notselected"}
-            variants={textVariants}
-            transition={{ duration: 0.25 }}
-          >
-            <motion.p
-              initial="notselected"
-              whileHover="hovered"
-              animate={selected === "paramount" ? "selected" : "notselected"}
-              variants={textVariants}
-              transition={{ duration: 0.25 }}
-            >
-              Paramount Theater
-            </motion.p>
-          </motion.span>
-        </button>
-        <div className="toggle-slider">
-          <motion.span
-            initial="capitol"
-            animate={selected}
-            variants={sliderVariants}
-            transition={{ type: "spring", damping: 15, stiffness: 250 }}
-            className="slider"
-          />
-        </div>
-      </div>
+      ))}
+      <motion.span
+        className="toggle-slider"
+        initial={false}
+        animate={selected}
+        variants={sliderVariants}
+        transition={{ type: "spring", damping: 22, stiffness: 300 }}
+        aria-hidden="true"
+      />
     </div>
   );
 };

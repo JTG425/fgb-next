@@ -19,29 +19,10 @@ const handleDateFormating = (date) => {
   return `${formattedMonth}${formattedDay}${year}`;
 };
 
-const buttonVariants = {
-  hovered: {
-    backgroundColor: "var(--primary)",
-    color: "var(--copy)",
-    boxShadow: "0px 0px 10px rgba(148, 3, 3, 0.5)",
-    transition: { duration: 0.2 },
-  },
-  nothovered: {
-    backgroundColor: "var(--foreground)",
-    color: "var(--copy)",
-    boxShadow: "var(--box-shadow)",
-    transition: { duration: 0.2 },
-  },
-};
-
 export default function Home() {
   const { capShows, parShows, upcoming, loading, slideshow } = useSite();
   const [date, setDate] = useState(handleDateFormating(new Date()));
   const [selectedTheater, setSelectedTheater] = useState("capitol");
-
-  const handleTheaterChange = (theater) => {
-    setSelectedTheater(theater);
-  };
 
   const handleDateChange = (newDate) => {
     setDate(handleDateFormating(newDate));
@@ -57,14 +38,18 @@ export default function Home() {
           exit={{ opacity: 0 }}
         >
           <SlideShow slideshowData={slideshow} />
-          <div className="home-container">
-            <SelectTheater
-              selected={selectedTheater}
-              setSelected={handleTheaterChange}
-            />
-            <CustomDatepicker setDate={handleDateChange} />
-            <img className="home-icon1" src="/assets/7.png" alt="" aria-hidden="true" />
-            <img className="home-icon2" src="/assets/7.png" alt="" aria-hidden="true" />
+          <div className="shell home-shell">
+            <div className="section-head">
+              <p className="eyebrow">Fresh Popcorn Daily</p>
+              <h2>Now Showing</h2>
+            </div>
+            <div className="home-controls">
+              <SelectTheater
+                selected={selectedTheater}
+                setSelected={setSelectedTheater}
+              />
+              <CustomDatepicker setDate={handleDateChange} />
+            </div>
             <div className="movies-container">
               <MovieCard
                 date={date}

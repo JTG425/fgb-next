@@ -18,6 +18,7 @@ export default function LoadingOverlay() {
           exit={{ opacity: 0 }}
         >
           <Logo />
+          <p className="loading-hint">Now Showing</p>
         </motion.div>
       )}
     </AnimatePresence>

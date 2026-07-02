@@ -1,6 +1,6 @@
 import "@/styles/componentstyles/prices.css";
 
-const prices = {
+const PRICES = {
   Standard: {
     Adult: "$12.84",
     Child: "$9.63",
@@ -18,15 +18,17 @@ const prices = {
 function Prices() {
   return (
     <div className="prices">
-      {Object.keys(prices).map((key) => (
-        <div className="showtype" key={key}>
-          <p>{key}</p>
-          {Object.keys(prices[key]).map((subKey) => (
-            <div key={subKey} className="price-item">
-              <p>{subKey}</p>
-              <p>{prices[key][subKey]}</p>
-            </div>
-          ))}
+      {Object.entries(PRICES).map(([showType, tiers]) => (
+        <div className="showtype" key={showType}>
+          <p className="showtype-name">{showType}</p>
+          <div className="price-items">
+            {Object.entries(tiers).map(([tier, price]) => (
+              <div key={tier} className="price-item">
+                <p className="price-tier">{tier}</p>
+                <p className="price-value">{price}</p>
+              </div>
+            ))}
+          </div>
         </div>
       ))}
     </div>

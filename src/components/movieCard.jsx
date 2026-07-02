@@ -2,12 +2,9 @@
 
 import "@/styles/componentstyles/moviecard.css";
 import { motion, AnimatePresence } from "framer-motion";
-import { useMemo, useState, Suspense } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FaInfoCircle } from "react-icons/fa";
 import { IoCloseOutline } from "react-icons/io5";
-import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
-import "react-loading-skeleton/dist/skeleton.css";
-import { SuspenseImage } from "./suspenseImage";
 
 const NO_IMAGE_URL =
   "https://fgbtheatersstoragef2bb9-dev.s3.amazonaws.com/public/images/noimage.png";
@@ -41,225 +38,202 @@ const createDisplayTime = (time) => {
 const hasTrailer = (trailer) =>
   Boolean(trailer) && !trailer.endsWith("/embed/") && trailer.trim() !== "";
 
-const buttonVariants = {
-  hovered: {
-    background: "#940303",
-    color: "#fbfbfb",
-    boxShadow: "0px 0px 10px 0px rgba(148, 3, 3, 0.75)",
-  },
-  nothovered: {
-    background: "var(--foreground)",
-    color: "#940303",
-    boxShadow: "0px 0px 0px 0px rgba(148, 3, 3, 0)",
-  },
-};
+function Poster({ src, alt }) {
+  const [loaded, setLoaded] = useState(false);
 
-const trailerButtonVariants = {
-  hovered: {
-    background: "#940303",
-    color: "#fbfbfb",
-    boxShadow: "0px 0px 10px 0px rgba(148, 3, 3, 0.75)",
-    overflowX: "visible",
-    overflowY: "hidden",
-    width: "100px",
-  },
-  nothovered: {
-    background: "var(--foreground)",
-    color: "#940303",
-    boxShadow: "0px 0px 0px 0px rgba(148, 3, 3, 0)",
-    overflowX: "hidden",
-    overflowY: "hidden",
-    width: "50px",
-  },
-};
+  return (
+    <div className={`poster-frame${loaded ? " loaded" : ""}`}>
+      <img
+        className="poster"
+        src={src}
+        alt={alt}
+        loading="lazy"
+        decoding="async"
+        onLoad={() => setLoaded(true)}
+      />
+    </div>
+  );
+}
+
+function TrailerModal({ film, onClose }) {
+  // Escape closes; the page never scrolls underneath the open modal.
+  useEffect(() => {
+    const onKeyDown = (e) => e.key === "Escape" && onClose();
+    document.addEventListener("keydown", onKeyDown);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [onClose]);
+
+  return (
+    <motion.div
+      className="trailer-background"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.25 }}
+      onClick={onClose}
+    >
+      <button
+        className="close-trailer"
+        onClick={onClose}
+        aria-label="Close trailer"
+      >
+        <IoCloseOutline />
+      </button>
+
+      <motion.div
+        className="trailer-container"
+        role="dialog"
+        aria-modal="true"
+        aria-label={`${film.name} details`}
+        initial={{ opacity: 0, y: 24, scale: 0.97 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 24, scale: 0.97 }}
+        transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <span className="trailer-header">
+          <h2>{film.name}</h2>
+        </span>
+        {hasTrailer(film.trailer) && (
+          <iframe
+            title="trailer"
+            className="youtube-trailer"
+            type="text/html"
+            src={`${film.trailer}?autoplay=1`}
+            width="480"
+            height="390"
+            allow="autoplay; encrypted-media"
+            allowFullScreen
+          />
+        )}
+        <div className="movie-info">
+          <span className="movie-stats">
+            <p>{film.rating}</p>
+            <span className="stat-dot" aria-hidden="true" />
+            <p>{createDisplayTime(film.length)}</p>
+          </span>
+          <p className="movie-description">{film.description}</p>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
 
 function MovieCard({ date, capShows, parShows, selectedTheater }) {
   const displayDate = createDisplayDate(date);
-  const [trailerButtonHovered, setTrailerButtonHovered] = useState(false);
-  const [showTrailer, setShowTrailer] = useState(false);
-  const [trailerIndex, setTrailerIndex] = useState(0);
+  const [selectedFilm, setSelectedFilm] = useState(null);
 
   // Derive the visible films directly — no state/effect round-trips.
   const films = useMemo(() => {
     const shows = selectedTheater === "capitol" ? capShows : parShows;
     if (!shows) return [];
-    return shows.filter((film) =>
-      film.show.some((show) => show.date === date)
-    );
+    return shows.filter((film) => film.show.some((show) => show.date === date));
   }, [selectedTheater, capShows, parShows, date]);
 
   const isAnyMovies = films.length > 0;
 
   return (
-    <motion.div className="movieCard">
+    <div className="movieCard">
       <AnimatePresence mode="popLayout">
         {isAnyMovies ? (
           films.map((film, filmIndex) => (
-            <motion.div
-              className="film"
+            <motion.article
+              className="film card card-hover"
               key={`movie-${filmIndex}-${film.name}`}
-              initial={{ opacity: 0, y: 100 }}
+              initial={{ opacity: 0, y: 60 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 100 }}
-              transition={{ duration: 0.5, type: "spring" }}
+              exit={{ opacity: 0, y: 60 }}
+              transition={{
+                duration: 0.5,
+                type: "spring",
+                bounce: 0.25,
+                delay: Math.min(filmIndex * 0.06, 0.3),
+              }}
             >
               <div className="poster-container">
-                <Suspense
-                  fallback={
-                    <div className="poster-skeleton">
-                      <SkeletonTheme
-                        baseColor="var(--background)"
-                        highlightColor="var(--foreground)"
-                      >
-                        <Skeleton width={200} height={300} />
-                      </SkeletonTheme>
-                    </div>
+                <Poster
+                  src={
+                    film.poster === NO_IMAGE_URL
+                      ? "/assets/noimage.webp"
+                      : film.poster
                   }
-                >
-                  <SuspenseImage
-                    className="poster"
-                    src={
-                      film.poster === NO_IMAGE_URL
-                        ? "/assets/noimage.png"
-                        : film.poster
-                    }
-                    alt={film.name}
-                  />
-                </Suspense>
+                  alt={film.name}
+                />
               </div>
-              <motion.div
-                key={`movie-${filmIndex}-${film.name}-header`}
-                className="film-header"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-              >
-                <a href={film.website} target="_blank" rel="noopener noreferrer">
+              <div className="film-header">
+                <a
+                  href={film.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="film-name-link"
+                >
                   <h3 className="film-name">{film.name}</h3>
                 </a>
                 <span className="film-info">
                   <p>{film.rating}</p>
-                  <p>|</p>
+                  <span className="stat-dot" aria-hidden="true" />
                   <p>{createDisplayTime(film.length)}</p>
-                </span>
-                <span className="film-trailer-desc">
-                  <motion.button
-                    key={`${film.trailer}-${film.name}-${filmIndex}`}
+                  <button
                     className="film-trailer"
-                    initial="nothovered"
-                    whileHover="hovered"
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => {
-                      setShowTrailer(true);
-                      setTrailerIndex(filmIndex);
-                    }}
-                    onMouseEnter={() => {
-                      setTrailerButtonHovered(true);
-                      setTrailerIndex(filmIndex);
-                    }}
-                    onMouseLeave={() => {
-                      setTrailerButtonHovered(false);
-                    }}
-                    variants={trailerButtonVariants}
+                    onClick={() => setSelectedFilm(film)}
+                    aria-label={`About ${film.name}${
+                      hasTrailer(film.trailer) ? " and trailer" : ""
+                    }`}
                   >
-                    <FaInfoCircle />
-                    {trailerButtonHovered && trailerIndex === filmIndex ? (
-                      <p>Info</p>
-                    ) : null}
-                  </motion.button>
-                  {showTrailer && trailerIndex === filmIndex ? (
-                    <motion.div
-                      className="trailer-background"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.5 }}
-                      onClick={() => setShowTrailer(false)}
-                    >
-                      <motion.button
-                        className="close-trailer"
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => setShowTrailer(false)}
-                        aria-label="Close trailer"
-                      >
-                        <IoCloseOutline />
-                      </motion.button>
-
-                      <motion.div
-                        key={`movie-${filmIndex}-${film.name}-trailer-container`}
-                        className="trailer-container"
-                        initial={{ opacity: 0, y: "0" }}
-                        animate={{ opacity: 1, y: "0" }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.5 }}
-                      >
-                        <span className="trailer-header">
-                          <h2>{film.name}</h2>
-                        </span>
-                        {hasTrailer(film.trailer) && (
-                          <iframe
-                            title="trailer"
-                            className="youtube-trailer"
-                            type="text/html"
-                            src={`${film.trailer}?autoplay=1`}
-                            width="480"
-                            height="390"
-                            allow="autoplay; encrypted-media"
-                            allowFullScreen
-                          />
-                        )}
-                        <div className="movie-info-container">
-                          <div className="movie-info">
-                            <span className="movie-stats">
-                              <p>{film.rating}</p>
-                              <p>|</p>
-                              <p>{createDisplayTime(film.length)}</p>
-                            </span>
-                            <span className="movie-description">
-                              <p>{film.description}</p>
-                            </span>
-                          </div>
-                        </div>
-                      </motion.div>
-                    </motion.div>
-                  ) : null}
+                    <FaInfoCircle aria-hidden="true" />
+                    <span className="film-trailer-label">Info</span>
+                  </button>
                 </span>
-                {film.show
-                  .filter((show) => show.date === date)
-                  .map((show, showIndex) => (
-                    <div className="showtime" key={showIndex}>
+                <div className="showtimes">
+                  {film.show
+                    .filter((show) => show.date === date)
+                    .map((show, showIndex) => (
                       <a
                         className="showtime-link"
+                        key={showIndex}
                         href={show.salelink}
                         target="_blank"
                         rel="noopener noreferrer"
                       >
-                        <motion.button
-                          className="showtime-button"
-                          initial="nothovered"
-                          whileHover="hovered"
-                          whileTap={{ scale: 0.98 }}
-                          variants={buttonVariants}
-                        >
-                          <motion.p whileHover={{ color: "#fbfbfb" }}>
-                            {convertToStandardTime(show.time)}
-                            {show.Subtitles === "True" ? " (Subtitles)" : ""}
-                          </motion.p>
-                        </motion.button>
+                        <span className="showtime-button">
+                          {convertToStandardTime(show.time)}
+                          {show.Subtitles === "True" ? " (Subtitles)" : ""}
+                        </span>
                       </a>
-                    </div>
-                  ))}
-              </motion.div>
-            </motion.div>
+                    ))}
+                </div>
+              </div>
+            </motion.article>
           ))
         ) : (
-          <div className="no-shows">
+          <motion.div
+            className="no-shows card"
+            key="no-shows"
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 40 }}
+            transition={{ duration: 0.4 }}
+          >
             <h2>No Scheduled Movies for {displayDate}</h2>
-            <h3>Grab some popcorn and hang tight!</h3>
-          </div>
+            <p>Grab some popcorn and hang tight!</p>
+          </motion.div>
         )}
       </AnimatePresence>
-    </motion.div>
+
+      <AnimatePresence>
+        {selectedFilm && (
+          <TrailerModal
+            film={selectedFilm}
+            onClose={() => setSelectedFilm(null)}
+          />
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
 
