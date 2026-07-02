@@ -1,0 +1,156 @@
+.slideshow {
+    position: relative;
+    width: 100%;
+    height: 60vh;
+    max-height: 600px;
+    margin-bottom: 10px;
+    border-radius: 0;
+    background: transparent;
+    overflow: hidden;
+}
+
+/* The blur now lives on a static pseudo-element instead of the container
+   itself. backdrop-filter on an element whose children are constantly
+   transforming forces expensive re-rasterization every frame — one of the
+   main stutter sources. Visually identical: it still blurs the page
+   content behind the slideshow. */
+.slideshow::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    pointer-events: none;
+}
+
+.blur {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    /* blur(0px) removed: visually a no-op, but it still created a backdrop
+       root and cost GPU time on every frame. */
+}
+
+/* Each slide (entering AND exiting) is its own absolutely-stacked,
+   GPU-promoted layer, so the two never fight over layout during a swap. */
+.slide-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    will-change: transform, opacity;
+}
+
+.slide-content {
+    position: absolute;
+    inset: 0; /* was width: 100vw — 100vw includes the scrollbar, which
+                 pushed content off-center and caused horizontal jiggle */
+    z-index: 5;
+    display: flex;
+    flex-direction: row;
+    justify-content: center; /* was space-around: items drifted toward the
+                                edges on wide viewports instead of staying
+                                centered as a pair */
+    align-items: center;
+    gap: clamp(2rem, 6vw, 5rem);
+    padding: 1rem;
+}
+
+.slide-left {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0; /* the poster never gets squished by the text card */
+}
+
+.slide-right {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    max-width: min(520px, 100%); /* keeps the card compact and the pair
+                                    visually centered on wide screens */
+    padding: 1rem;
+    background: var(--foreground-glass);
+    color: var(--copy);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+}
+
+.slide-right h2 {
+    font-size: 1.5rem;
+    margin: 0;
+}
+
+.slide-right p {
+    font-size: 1rem;
+    margin: 0;
+}
+
+.slide-image {
+    display: block;
+    width: 200px;
+    aspect-ratio: 2 / 3;
+    object-fit: cover; /* posters whose intrinsic ratio isn't exactly 2:3
+                          were being stretched before */
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+}
+
+.slideshow-controls {
+    position: absolute;
+    inset: 0;
+    z-index: 9;
+    display: flex;
+}
+
+.slideshow-controls button {
+    width: 50%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    border: none;
+    color: var(--copy);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+@media screen and (max-width: 675px) {
+    .slideshow {
+        height: 70vh;
+        max-height: 600px;
+        width: 100%; /* was 100vw — same scrollbar overflow issue */
+        border-radius: 0;
+        margin-top: 0;
+    }
+
+    .slide-content {
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+    }
+
+    .slide-left {
+        height: auto;
+        margin: 0;
+    }
+
+    .slide-right {
+        width: 90%;
+        max-width: 100%;
+        border-radius: 0;
+    }
+}
+
+@media screen and (min-width: 1000px) {
+    .slideshow {
+        margin-top: -80px;
+        border-radius: var(--border-radius);
+        height: 75vh;
+    }
+}
